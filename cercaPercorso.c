@@ -110,11 +110,6 @@ void maxHeapify(MaxHeap* maxHeap, int index) {
 
 // Insert an element into the Max Heap
 void insert(MaxHeap* maxHeap, int element) {
-    if (maxHeap->size == maxHeap->capacity) {
-        printf("Max Heap is full. Unable to insert element.\n");
-        return;
-    }
-
     maxHeap->size++;
     int index = maxHeap->size - 1;
     maxHeap->elements[index] = element;
@@ -162,8 +157,9 @@ Node* createNode(int vertex) {
     newNode->next = NULL;
 
     // Initialize Max Heap
-    newNode->maxHeap = (MaxHeap*)malloc(sizeof(MaxHeap));
+    //newNode->maxHeap = (MaxHeap*)malloc(sizeof(MaxHeap));
     // Perform additional initialization for the Max Heap if required
+    newNode->maxHeap = createMaxHeap( 512);
 
     return newNode;
 }
@@ -210,7 +206,7 @@ void printGraph(Graph* graph) {
 
 // Main function
 int main() {
-    int numVertices = 5;
+    int numVertices = 0;
     Graph* graph = createGraph(numVertices);
     char line[MAX_LINE_LENGTH];
     char *word;
@@ -270,11 +266,18 @@ void aggiungi_stazione(Graph* graph, char *args[100], int arg_count) {
 
     // Create a new node for the station
     Node* newNode = createNode(atoi(args[1]));
-
     // Add the new node to the adjacency list
     graph->adjacencyList[graph->numVertices] = newNode;
-
     // Increment the number of vertices in the graph
     graph->numVertices++;
+
+    for (int i = 3; i <= atoi(args[2]) + 2 ; ++i) {
+        insert(newNode->maxHeap, atoi(args[i]));
+    }
+
+    printGraph(graph);
+    printMaxHeap(newNode->maxHeap);
+
+    printf("\n");
 }
 
