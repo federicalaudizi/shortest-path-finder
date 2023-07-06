@@ -2,222 +2,193 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_LINE_LENGTH 1000
-#define MAX_WORD_LENGTH 100
+#define INITIAL_CAPACITY 10
+#define RESIZE_FACTOR 2
+struct node
+{
+    int data, color; // 1-red, 0-black
+    struct node *left, *right, *parent;
+};
 
-// Max Heap structure
-typedef struct MaxHeap {
-    int* elements;
-    int capacity;
-    int size;
-} MaxHeap;
+struct node* root = NULL;
 
-// Node structure for the linked list
-typedef struct Node {
-    int vertex;
-    struct Node* next;
-    MaxHeap* maxHeap;  // Pointer to Max Heap
-} Node;
+void  addStation(char** args, int arg_count);
 
-// Graph structure
-typedef struct Graph {
-    int numVertices;
-    Node** adjacencyList;
-    int capacity;
-} Graph;
+// function to perform BST insertion of a node
+struct node* insert(struct node* trav,struct node* temp){
+    // If the tree is empty,
+    // return a new node
+    if (trav == NULL)
+        return temp;
 
-void aggiungi_stazione(Graph* graph, char *args[100], int arg_count);
-
-void pianifica_percorso(Graph* graph, char *args[100], int arg_count);
-
-void demolisci_stazione(Graph* graph, char *args[100], int arg_count);
-
-void aggiungi_auto(Graph* graph, char *args[100], int arg_count);
-
-void rottama_auto(Graph *graph, char *args[100], int arg_count);
-
-// Create a new Max Heap
-MaxHeap* createMaxHeap(int capacity) {
-    MaxHeap* maxHeap = (MaxHeap*)malloc(sizeof(MaxHeap));
-    maxHeap->elements = (int*)malloc(capacity * sizeof(int));
-    maxHeap->capacity = capacity;
-    maxHeap->size = 0;
-    return maxHeap;
-}
-
-// Resize the graph by increasing the capacity
-void resizeGraph(Graph* graph) {
-    int newCapacity = graph->numVertices * 2;
-
-    // Create a new adjacency list with increased capacity
-    Node** newAdjacencyList = (Node**)malloc(newCapacity * sizeof(Node*));
-    for (int i = 0; i < newCapacity; i++) {
-        newAdjacencyList[i] = NULL;
+    // Otherwise recur down the tree
+    if (temp->data < trav->data)
+    {
+        trav->left = insert(trav->left, temp);
+        trav->left->parent = trav;
+    }
+    else if (temp->data > trav->data)
+    {
+        trav->right = insert(trav->right, temp);
+        trav->right->parent = trav;
     }
 
-    // Copy the existing adjacency list to the new list
-    for (int i = 0; i < graph->numVertices; i++) {
-        newAdjacencyList[i] = graph->adjacencyList[i];
-    }
-
-    // Free the memory occupied by the old adjacency list
-    free(graph->adjacencyList);
-
-    // Update the graph with the new adjacency list and capacity
-    graph->adjacencyList = newAdjacencyList;
-    graph->capacity = newCapacity;
+    // Return the (unchanged) node pointer
+    return trav;
 }
 
-// Get the parent index of a node
-int getParentIndex(int index) {
-    return (index - 1) / 2;
+void rightRotate(struct node* temp)
+{
+    struct node* left = temp->left;
+    temp->left = left->right;
+    if (temp->left)
+        temp->left->parent = temp;
+    left->parent = temp->parent;
+    if (!temp->parent)
+        root = left;
+    else if (temp == temp->parent->left)
+        temp->parent->left = left;
+    else
+        temp->parent->right = left;
+    left->right = temp;
+    temp->parent = left;
 }
 
-// Get the left child index of a node
-int getLeftChildIndex(int index) {
-    return (2 * index) + 1;
+void leftrotate(struct node* temp)
+{
+    struct node* right = temp->right;
+    temp->right = right->left;
+    if (temp->right)
+        temp->right->parent = temp;
+    right->parent = temp->parent;
+    if (!temp->parent)
+        root = right;
+    else if (temp == temp->parent->left)
+        temp->parent->left = right;
+    else
+        temp->parent->right = right;
+    right->left = temp;
+    temp->parent = right;
 }
 
-// Get the right child index of a node
-int getRightChildIndex(int index) {
-    return (2 * index) + 2;
-}
+// This function fixes violations
+// caused by insertion
+void fixup(struct node* root, struct node* pt)
+{
+    struct node* parent_pt = NULL;
+    struct node* grand_parent_pt = NULL;
 
-// Swap two elements in the Max Heap
-void swap(int* a, int* b) {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
+    while ((pt != root) && (pt->color != 0)
+           && (pt->parent->color == 1))
+    {
+        parent_pt = pt->parent;
+        grand_parent_pt = pt->parent->parent;
 
-// Heapify the Max Heap from a given index
-void maxHeapify(MaxHeap* maxHeap, int index) {
-    int largest = index;
-    int leftChildIndex = getLeftChildIndex(index);
-    int rightChildIndex = getRightChildIndex(index);
+        /*  Case : A
+             Parent of pt is left child
+             of Grand-parent of
+           pt */
+        if (parent_pt == grand_parent_pt->left)
+        {
 
-    if (leftChildIndex < maxHeap->size && maxHeap->elements[leftChildIndex] > maxHeap->elements[largest])
-        largest = leftChildIndex;
+            struct node* uncle_pt = grand_parent_pt->right;
 
-    if (rightChildIndex < maxHeap->size && maxHeap->elements[rightChildIndex] > maxHeap->elements[largest])
-        largest = rightChildIndex;
+            /* Case : 1
+                The uncle of pt is also red
+                Only Recoloring required */
+            if (uncle_pt != NULL && uncle_pt->color == 1)
+            {
+                grand_parent_pt->color = 1;
+                parent_pt->color = 0;
+                uncle_pt->color = 0;
+                pt = grand_parent_pt;
+            }
 
-    if (largest != index) {
-        swap(&maxHeap->elements[index], &maxHeap->elements[largest]);
-        maxHeapify(maxHeap, largest);
-    }
-}
+            else {
 
-// Insert an element into the Max Heap
-void insert(MaxHeap* maxHeap, int element) {
-    maxHeap->size++;
-    int index = maxHeap->size - 1;
-    maxHeap->elements[index] = element;
+                /* Case : 2
+                     pt is right child of its parent
+                     Left-rotation required */
+                if (pt == parent_pt->right) {
+                    leftrotate(parent_pt);
+                    pt = parent_pt;
+                    parent_pt = pt->parent;
+                }
 
-    // Fix the Max Heap property
-    while (index != 0 && maxHeap->elements[getParentIndex(index)] < maxHeap->elements[index]) {
-        swap(&maxHeap->elements[index], &maxHeap->elements[getParentIndex(index)]);
-        index = getParentIndex(index);
-    }
-}
-
-// Extract the maximum element from the Max Heap
-int extractMax(MaxHeap* maxHeap) {
-    if (maxHeap->size == 0) {
-        printf("Max Heap is empty. Unable to extract maximum element.\n");
-        return -1;
-    }
-
-    if (maxHeap->size == 1) {
-        maxHeap->size--;
-        return maxHeap->elements[0];
-    }
-
-    int root = maxHeap->elements[0];
-    maxHeap->elements[0] = maxHeap->elements[maxHeap->size - 1];
-    maxHeap->size--;
-    maxHeapify(maxHeap, 0);
-
-    return root;
-}
-
-// Print the Max Heap
-void printMaxHeap(MaxHeap* maxHeap) {
-    printf("Max Heap: ");
-    for (int i = 0; i < maxHeap->size; i++) {
-        printf("%d ", maxHeap->elements[i]);
-    }
-    printf("\n");
-}
-
-// Create a new node with the given vertex and initialize the Max Heap
-Node* createNode(int vertex) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    newNode->vertex = vertex;
-    newNode->next = NULL;
-
-    // Initialize Max Heap
-    //newNode->maxHeap = (MaxHeap*)malloc(sizeof(MaxHeap));
-    // Perform additional initialization for the Max Heap if required
-    newNode->maxHeap = createMaxHeap( 512);
-
-    return newNode;
-}
-
-// Create a graph with the given number of vertices
-Graph* createGraph(int numVertices) {
-    Graph* graph = (Graph*)malloc(sizeof(Graph));
-    graph->numVertices = numVertices;
-    graph->capacity = 50;
-
-    graph->adjacencyList = (Node**)malloc(numVertices * sizeof(Node*));
-    for (int i = 0; i < numVertices; i++) {
-        graph->adjacencyList[i] = NULL;
-    }
-
-    return graph;
-}
-
-// Add an edge to the graph
-void addEdge(Graph* graph, int src, int dest) {
-    // Add an edge from src to dest
-    Node* newNode = createNode(dest);
-    newNode->next = graph->adjacencyList[src];
-    graph->adjacencyList[src] = newNode;
-
-    // Add an edge from dest to src (for undirected graph)
-    newNode = createNode(src);
-    newNode->next = graph->adjacencyList[dest];
-    graph->adjacencyList[dest] = newNode;
-}
-
-// Print the graph
-void printGraph(Graph* graph) {
-    for (int i = 0; i < graph->numVertices; i++) {
-        Node* currentNode = graph->adjacencyList[i];
-        printf("Adjacency list of vertex %d: ", i);
-        while (currentNode) {
-            printf("%d ", currentNode->vertex);
-            currentNode = currentNode->next;
+                /* Case : 3
+                     pt is left child of its parent
+                     Right-rotation required */
+                rightRotate(grand_parent_pt);
+                int t = parent_pt->color;
+                parent_pt->color = grand_parent_pt->color;
+                grand_parent_pt->color = t;
+                pt = parent_pt;
+            }
         }
-        printf("\n");
+
+            /* Case : B
+                 Parent of pt is right
+                 child of Grand-parent of
+               pt */
+        else {
+            struct node* uncle_pt = grand_parent_pt->left;
+
+            /*  Case : 1
+                The uncle of pt is also red
+                Only Recoloring required */
+            if ((uncle_pt != NULL) && (uncle_pt->color == 1))
+            {
+                grand_parent_pt->color = 1;
+                parent_pt->color = 0;
+                uncle_pt->color = 0;
+                pt = grand_parent_pt;
+            }
+            else {
+                /* Case : 2
+                   pt is left child of its parent
+                   Right-rotation required */
+                if (pt == parent_pt->left) {
+                    rightRotate(parent_pt);
+                    pt = parent_pt;
+                    parent_pt = pt->parent;
+                }
+
+                /* Case : 3
+                     pt is right child of its parent
+                     Left-rotation required */
+                leftrotate(grand_parent_pt);
+                int t = parent_pt->color;
+                parent_pt->color = grand_parent_pt->color;
+                grand_parent_pt->color = t;
+                pt = parent_pt;
+            }
+        }
     }
 }
 
-// Main function
+// Function to print inorder traversal
+// of the fixated tree
+void inorder(struct node* trav)
+{
+    if (trav == NULL)
+        return;
+    inorder(trav->left);
+    printf("%d ", trav->data);
+    inorder(trav->right);
+}
+
+
 int main() {
-    int numVertices = 0;
-    Graph* graph = createGraph(numVertices);
-    char line[MAX_LINE_LENGTH];
+    char line[1000];
     char *word;
-    char *args[MAX_WORD_LENGTH];
+    char *args[515];
     int arg_count;
 
-    // Read each line from stdin
     while (fgets(line, sizeof(line), stdin) != NULL) {
         // Extract individual words from the line
         word = strtok(line, " \t\n");  // Split the line by spaces, tabs, and newlines
         arg_count = 0;
+
 
         while (word != NULL) {
             // Store the word in the arguments array
@@ -229,55 +200,32 @@ int main() {
 
         // Check the command and perform the corresponding action
         if (strcmp(args[0], "aggiungi-stazione") == 0) {
-            aggiungi_stazione(graph, args, arg_count);
+            addStation(args, arg_count);
+            printf("aggiunta\n");
         } else if (strcmp(args[0], "pianifica-percorso") == 0) {
-            pianifica_percorso(graph, args, arg_count);
+            //TODO pathPlan
         } else if (strcmp(args[0], "demolisci-stazione") == 0) {
-            demolisci_stazione(graph, args, arg_count);
+            //TODO removeStation
         } else if (strcmp(args[0], "aggiungi-auto") == 0) {
-            aggiungi_auto(graph, args, arg_count);
-        } else if(strcmp(args[0], "rottama-auto") == 0) {
-            rottama_auto(graph, args, arg_count);
+            //TODO addCar
+        } else if (strcmp(args[0], "rottama-auto") == 0) {
+            //TODO removeCar
         }
     }
     return 0;
 }
 
-void rottama_auto(Graph *graph, char *args[100], int arg_count) {
+void addStation(char**args, int arg_count){
+    struct node* temp= (struct node*)malloc(sizeof(struct node));
+    temp->right = NULL;
+    temp->left = NULL;
+    temp->parent = NULL;
+    temp->data = atoi(args[1]);
+    temp->color = 1;
 
+    // calling function that performs bst insertion on this newly created node
+    root = insert(root, temp);
+    // calling function to preserve properties of rb tree
+    fixup(root, temp);
+    root->color = 0;
 }
-
-void aggiungi_auto(Graph* graph, char *args[100], int arg_count) {
-
-}
-
-void demolisci_stazione(Graph* graph,char *args[100], int arg_count) {
-
-}
-
-void pianifica_percorso(Graph* graph, char *args[100], int arg_count) {
-
-}
-
-void aggiungi_stazione(Graph* graph, char *args[100], int arg_count) {
-    if (graph->numVertices == graph->capacity) {
-        resizeGraph(graph);
-    }
-
-    // Create a new node for the station
-    Node* newNode = createNode(atoi(args[1]));
-    // Add the new node to the adjacency list
-    graph->adjacencyList[graph->numVertices] = newNode;
-    // Increment the number of vertices in the graph
-    graph->numVertices++;
-
-    for (int i = 3; i <= atoi(args[2]) + 2 ; ++i) {
-        insert(newNode->maxHeap, atoi(args[i]));
-    }
-
-    printGraph(graph);
-    printMaxHeap(newNode->maxHeap);
-
-    printf("\n");
-}
-
