@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #define INITIAL_CAPACITY 10
 #define RESIZE_FACTOR 2
 struct node
@@ -73,12 +74,12 @@ void leftrotate(struct node* temp)
 
 // This function fixes violations
 // caused by insertion
-void fixup(struct node* root, struct node* pt)
+void fixup(struct node* treeRoot, struct node* pt)
 {
     struct node* parent_pt = NULL;
     struct node* grand_parent_pt = NULL;
 
-    while ((pt != root) && (pt->color != 0)
+    while ((pt != treeRoot) && (pt->color != 0)
            && (pt->parent->color == 1))
     {
         parent_pt = pt->parent;
