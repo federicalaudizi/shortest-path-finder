@@ -2,18 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-#define INITIAL_CAPACITY 10
-#define RESIZE_FACTOR 2
 struct node
 {
-    int data, color; // 1-red, 0-black
+    int data, color, cardinality; // 1-red, 0-black
     struct node *left, *right, *parent;
+    struct node *cars;
 };
 
 struct node* root = NULL;
 
 void  addStation(char** args, int arg_count);
+void removeStation (char** args, int arg_count);
 
 // function to perform BST insertion of a node
 struct node* insert(struct node* trav,struct node* temp){
@@ -32,6 +31,8 @@ struct node* insert(struct node* trav,struct node* temp){
     {
         trav->right = insert(trav->right, temp);
         trav->right->parent = trav;
+    } else if (temp->data == trav->data){
+        trav->cardinality++;
     }
 
     // Return the (unchanged) node pointer
@@ -55,7 +56,7 @@ void rightRotate(struct node* temp)
     temp->parent = left;
 }
 
-void leftrotate(struct node* temp)
+void leftRotate(struct node* temp)
 {
     struct node* right = temp->right;
     temp->right = right->left;
@@ -111,7 +112,7 @@ void fixup(struct node* treeRoot, struct node* pt)
                      pt is right child of its parent
                      Left-rotation required */
                 if (pt == parent_pt->right) {
-                    leftrotate(parent_pt);
+                    leftRotate(parent_pt);
                     pt = parent_pt;
                     parent_pt = pt->parent;
                 }
@@ -157,7 +158,7 @@ void fixup(struct node* treeRoot, struct node* pt)
                 /* Case : 3
                      pt is right child of its parent
                      Left-rotation required */
-                leftrotate(grand_parent_pt);
+                leftRotate(grand_parent_pt);
                 int t = parent_pt->color;
                 parent_pt->color = grand_parent_pt->color;
                 grand_parent_pt->color = t;
@@ -175,7 +176,19 @@ void inorder(struct node* trav)
         return;
     inorder(trav->left);
     printf("%d ", trav->data);
+    printf("%d ", trav->cardinality);
     inorder(trav->right);
+}
+
+struct node* search(struct node* trav, int value)
+{
+    if (trav == NULL || trav->data == value)
+        return trav; // Return the current node if it matches the value or if the tree is empty
+
+    if (value < trav->data)
+        return search(trav->left, value); // Recursively search in the left subtree
+
+    return search(trav->right, value); // Recursively search in the right subtree
 }
 
 
@@ -206,7 +219,7 @@ int main() {
         } else if (strcmp(args[0], "pianifica-percorso") == 0) {
             //TODO pathPlan
         } else if (strcmp(args[0], "demolisci-stazione") == 0) {
-            //TODO removeStation
+            removeStation(args, arg_count);
         } else if (strcmp(args[0], "aggiungi-auto") == 0) {
             //TODO addCar
         } else if (strcmp(args[0], "rottama-auto") == 0) {
@@ -221,12 +234,33 @@ void addStation(char**args, int arg_count){
     temp->right = NULL;
     temp->left = NULL;
     temp->parent = NULL;
+    temp->cardinality = 1;
     temp->data = atoi(args[1]);
     temp->color = 1;
+    temp->cars = NULL;
 
     // calling function that performs bst insertion on this newly created node
     root = insert(root, temp);
+
     // calling function to preserve properties of rb tree
     fixup(root, temp);
+
+    //searching for the newly added station so to update its cars
+    struct node* result = search(root, temp->data);
+
+    for (int i = 3; i < arg_count; i++) {
+        struct node* carTemp= (struct node*)malloc(sizeof(struct node));
+        carTemp->right = NULL;
+        carTemp->cardinality = 1;
+        carTemp->left = NULL;
+        carTemp->parent = NULL;
+        carTemp->data = atoi(args[i]);
+        carTemp->color = 1;
+        carTemp->cars = NULL;
+
+        result->cars = insert(result->cars, carTemp);
+    }
+
     root->color = 0;
 }
+
