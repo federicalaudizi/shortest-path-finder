@@ -13,6 +13,7 @@ struct node* root = NULL;
 
 void  addStation(char** args, int arg_count);
 void removeStation (char** args, int arg_count);
+void addCar(char** args);
 
 // function to perform BST insertion of a node
 struct node* insert(struct node* trav,struct node* temp){
@@ -215,13 +216,12 @@ int main() {
         // Check the command and perform the corresponding action
         if (strcmp(args[0], "aggiungi-stazione") == 0) {
             addStation(args, arg_count);
-            printf("aggiunta\n");
         } else if (strcmp(args[0], "pianifica-percorso") == 0) {
             //TODO pathPlan
         } else if (strcmp(args[0], "demolisci-stazione") == 0) {
             removeStation(args, arg_count);
         } else if (strcmp(args[0], "aggiungi-auto") == 0) {
-            //TODO addCar
+            addCar(args);
         } else if (strcmp(args[0], "rottama-auto") == 0) {
             //TODO removeCar
         }
@@ -229,7 +229,7 @@ int main() {
     return 0;
 }
 
-void addStation(char**args, int arg_count){
+void addStation(char** args, int arg_count){
     struct node* temp= (struct node*)malloc(sizeof(struct node));
     temp->right = NULL;
     temp->left = NULL;
@@ -260,7 +260,37 @@ void addStation(char**args, int arg_count){
 
         result->cars = insert(result->cars, carTemp);
     }
+    printf("aggiunta\n");
 
     root->color = 0;
 }
 
+void addCar (char** args){
+    struct node* temp= (struct node*)malloc(sizeof(struct node));
+    temp->right = NULL;
+    temp->left = NULL;
+    temp->parent = NULL;
+    temp->data = atoi(args[1]);
+    temp->color = 1;
+    temp->cars = NULL;
+
+    struct node* station = search(root, temp->data);
+
+    if (station != NULL){
+        printf("non aggiunta\n");
+    } else{
+        struct node* carTemp= (struct node*)malloc(sizeof(struct node));
+        carTemp->right = NULL;
+        carTemp->cardinality = 1;
+        carTemp->left = NULL;
+        carTemp->parent = NULL;
+        carTemp->data = atoi(args[2]);
+        carTemp->color = 1;
+        carTemp->cars = NULL;
+
+        station->cars = insert(station->cars, carTemp);
+        printf("aggiunta");
+    }
+}
+
+void removeStation(char** args, int arg_count){}
