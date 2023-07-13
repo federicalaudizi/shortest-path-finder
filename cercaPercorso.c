@@ -18,9 +18,9 @@ void addCar(char **args);
 
 void removeCar(char **args);
 
-void transplant(struct node *treeRoot, struct node *u, struct node *v);
+void transplant(struct node *u, struct node *v);
 
-void deleteFixup(struct node *treeRoot, struct node *pt);
+void deleteFixup(struct node *pt);
 
 struct node *minimumNode(struct node *subtreeRoot);
 
@@ -189,10 +189,10 @@ void deleteNode(struct node *treeRoot, struct node *delNode) {
     // Case 1: Node to be deleted has no children or only one child
     if (delNode->left == NULL) {
         child = delNode->right;
-        transplant(treeRoot, delNode, delNode->right);
+        transplant(delNode, delNode->right);
     } else if (delNode->right == NULL) {
         child = delNode->left;
-        transplant(treeRoot, delNode, delNode->left);
+        transplant(delNode, delNode->left);
     } else {
         // Case 2: Node to be deleted has two children
         temp = minimumNode(delNode->right);
@@ -202,23 +202,23 @@ void deleteNode(struct node *treeRoot, struct node *delNode) {
         if (temp->parent == delNode)
             child->parent = temp;
         else {
-            transplant(treeRoot, temp, temp->right);
+            transplant(temp, temp->right);
             temp->right = delNode->right;
             temp->right->parent = temp;
         }
 
-        transplant(treeRoot, delNode, temp);
+        transplant(delNode, temp);
         temp->left = delNode->left;
         temp->left->parent = temp;
         temp->color = delNode->color;
     }
 
     if (originalColor == 0)
-        deleteFixup(treeRoot, child);
+        deleteFixup(child);
 }
 
 // Helper function to transplant a node in the red-black tree
-void transplant(struct node *treeRoot, struct node *u, struct node *v) {
+void transplant(struct node *u, struct node *v) {
     if (u->parent == NULL)
         root = v;
     else if (u == u->parent->left)
@@ -239,7 +239,7 @@ struct node *minimumNode(struct node *subtreeRoot) {
 }
 
 // Function to fix violations caused by deletion
-void deleteFixup(struct node *treeRoot, struct node *pt) {
+void deleteFixup(struct node *pt) {
     struct node *sibling;
 
     while (pt != root && (pt == NULL || pt->color == 0)) {
@@ -354,6 +354,7 @@ int main() {
     return 0;
 }
 
+//aggiungi-stazione distanza numero-auto autonomia-auto-1 ... autonomia-auto-n
 void addStation(char **args, int arg_count) {
     struct node *temp = (struct node *) malloc(sizeof(struct node));
     temp->right = NULL;
@@ -390,6 +391,7 @@ void addStation(char **args, int arg_count) {
     root->color = 0;
 }
 
+//aggiungi-auto distanza-stazione autonomia-auto-da-aggiungere
 void addCar(char **args) {
     struct node *temp = (struct node *) malloc(sizeof(struct node));
     temp->right = NULL;
@@ -420,21 +422,38 @@ void addCar(char **args) {
         } else{
             car->cardinality++;
         }
-        printf("aggiunta");
+        printf("aggiunta\n");
     }
 }
 
+//demolisci-stazione distanza
 void removeStation(char **args) {
     struct node *station = search(root, atoi(args[1]));
     if (station == NULL){
-        printf("non demolita");
+        printf("non demolita\n");
     }else{
         free(station->cars);
         deleteNode(root, station);
-        printf("demolita");
+        printf("demolita\n");
     }
 }
 
+//rottama-auto distanza-stazione autonomia-auto-da-rottamare
 void removeCar(char **args) {
+    struct node *station = search(root, atoi(args[1]));
+    if (station == NULL){
+        printf("non rottamata\n");
+    }else{
+        struct node *car = search(station->cars, atoi(args[2]));
 
+        if (car == NULL){
+            printf("non rottamata\n");
+        } else if (car->cardinality > 1){
+            car->cardinality--;
+            printf("rottamata\n");
+        } else{
+            deleteNode(station->cars, car);
+            printf("rottamata\n");
+        }
+    }
 }
