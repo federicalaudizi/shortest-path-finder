@@ -417,9 +417,9 @@ void addCar(char **args) {
 
         struct node *car = search(station->cars, carTemp->data);
 
-        if (car == NULL){
+        if (car == NULL) {
             station->cars = insert(station->cars, carTemp);
-        } else{
+        } else {
             car->cardinality++;
         }
         printf("aggiunta\n");
@@ -429,9 +429,9 @@ void addCar(char **args) {
 //demolisci-stazione distanza
 void removeStation(char **args) {
     struct node *station = search(root, atoi(args[1]));
-    if (station == NULL){
+    if (station == NULL) {
         printf("non demolita\n");
-    }else{
+    } else {
         free(station->cars);
         deleteNode(root, station);
         printf("demolita\n");
@@ -441,17 +441,17 @@ void removeStation(char **args) {
 //rottama-auto distanza-stazione autonomia-auto-da-rottamare
 void removeCar(char **args) {
     struct node *station = search(root, atoi(args[1]));
-    if (station == NULL){
+    if (station == NULL) {
         printf("non rottamata\n");
-    }else{
+    } else {
         struct node *car = search(station->cars, atoi(args[2]));
 
-        if (car == NULL){
+        if (car == NULL) {
             printf("non rottamata\n");
-        } else if (car->cardinality > 1){
+        } else if (car->cardinality > 1) {
             car->cardinality--;
             printf("rottamata\n");
-        } else{
+        } else {
             deleteNode(station->cars, car);
             printf("rottamata\n");
         }
