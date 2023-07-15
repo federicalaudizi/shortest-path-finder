@@ -613,7 +613,10 @@ void directJourney_path(struct node *dep, struct node *dest) {
                     }
                 }
             } else {
-                //TODO ora vediamo
+                printf("nessun percorso\n");
+                free(path);
+                path = NULL;
+                break;
             }
         }
     }
