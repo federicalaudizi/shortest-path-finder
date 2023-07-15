@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 struct node {
     int data, color, cardinality; // 1-red, 0-black
@@ -22,7 +23,12 @@ void transplant(struct node *u, struct node *v);
 
 void deleteFixup(struct node *pt);
 
-struct node *minimumNode(struct node *subtreeRoot);
+struct node *minimumNode(struct node *trav);
+
+void pathPlan(char **args);
+
+void directJourney_path(struct node *dep, struct node *dest);
+
 
 // function to perform BST insertion of a node
 struct node *insert(struct node *trav, struct node *temp) {
@@ -44,6 +50,22 @@ struct node *insert(struct node *trav, struct node *temp) {
 
     // Return the (unchanged) node pointer
     return trav;
+}
+
+bool isLeftChild(struct node *node) {
+    if (node == NULL || node->parent == NULL) {
+        return false;
+    }
+
+    return node->parent->left == node;
+}
+
+bool isRightChild(struct node *node) {
+    if (node == NULL || node->parent == NULL) {
+        return false;
+    }
+
+    return node->parent->right == node;
 }
 
 void rightRotate(struct node *temp) {
@@ -231,10 +253,17 @@ void transplant(struct node *u, struct node *v) {
 }
 
 // Helper function to find the minimum node in a subtree
-struct node *minimumNode(struct node *subtreeRoot) {
-    struct node *temp = subtreeRoot;
+struct node *minimumNode(struct node *trav) {
+    struct node *temp = trav;
     while (temp->left != NULL)
         temp = temp->left;
+    return temp;
+}
+
+struct node *maximumNode(struct node *trav) {
+    struct node *temp = trav;
+    while (temp->right != NULL)
+        temp = temp->right;
     return temp;
 }
 
@@ -306,7 +335,6 @@ void deleteFixup(struct node *pt) {
         pt->color = 0;
 }
 
-
 struct node *search(struct node *trav, int value) {
     if (trav == NULL || trav->data == value)
         return trav; // Return the current node if it matches the value or if the tree is empty
@@ -342,7 +370,7 @@ int main() {
         if (strcmp(args[0], "aggiungi-stazione") == 0) {
             addStation(args, arg_count);
         } else if (strcmp(args[0], "pianifica-percorso") == 0) {
-            //TODO pathPlan
+            pathPlan(args);
         } else if (strcmp(args[0], "demolisci-stazione") == 0) {
             removeStation(args);
         } else if (strcmp(args[0], "aggiungi-auto") == 0) {
@@ -454,6 +482,144 @@ void removeCar(char **args) {
         } else {
             deleteNode(station->cars, car);
             printf("rottamata\n");
+        }
+    }
+}
+
+// Function to perform DFS and find the path from node A to node B in a BST
+bool dfs(struct node *trav, int A, int B) {
+    if (trav == NULL)
+        return false;
+
+    // If the current node matches either A or B, we have found a path
+    if (trav->data == A || trav->data == B)
+        return true;
+
+    // Check if A and B are in different subtrees
+    bool left = dfs(trav->left, A, B);
+    bool right = dfs(trav->right, A, B);
+
+    // If A and B are in different subtrees, the current node is the lowest common ancestor
+    if (left && right) {
+        printf("%d ", trav->data);
+        return true;
+    }
+
+    // If A and B are in the same subtree, continue searching for the lowest common ancestor
+    return left || right;
+}
+
+//pianifica-percorso distanza-stazione-partenza distanza-stazione-arrivo
+void pathPlan(char **args) {
+    struct node *departure_station = search(root, atoi(args[1]));
+    struct node *arrival_station = search(root, atoi(args[2]));
+
+    if (departure_station->data == arrival_station->data) {
+        printf("%s\n", args[1]);
+    } else if (departure_station->data < arrival_station->data) { //andata
+        directJourney_path(departure_station, arrival_station);
+    } else {         //ritorno
+    }
+}
+
+void directJourney_path(struct node *dep, struct node *dest) {
+    int max_reachable = dep->data + maximumNode(dep->cars)->data;
+    struct node *temp = root;
+    int* path;  // Declare a pointer to an int (dynamic array)
+    int size = 10;
+    int capacity = 1;// Variable to store the index of the first free element in the array
+
+    path = (int*)malloc(size * sizeof(int));
+    path[0] = dep->data;
+
+    while (true) {
+        if (max_reachable > temp->data) {
+            if (temp->data < dest->data) {
+                //moving to the right subtree
+                if (temp->right != NULL){
+                    temp = temp->right;
+                }else{
+                    max_reachable = temp->data + maximumNode(temp->cars)->data;
+                    temp = root;
+                }
+            } else if (temp->data > dest->data) {
+                //moving to the left subtree
+                temp = temp->left;
+            } else{
+                if (capacity < size) {
+                    path[capacity] = temp->data;
+                    capacity++;
+                    break;
+                }else{
+                    int* tempArray = (int*)realloc(path, size * sizeof(int) * 2);
+                    path = tempArray;
+                }
+            }
+        }else if(max_reachable == temp->data){
+            if (capacity < size) {
+                path[capacity] = temp->data;
+                capacity++;
+            }else{
+                int* tempArray = (int*)realloc(path, size * sizeof(int) * 2);
+                path = tempArray;
+            }
+            max_reachable = temp->data + maximumNode(temp->cars)->data;
+        } else {
+            if (temp->left != NULL) {
+                if (max_reachable < temp->left->data) {
+                    //moving to the right subtree
+                    if (capacity < size) {
+                        path[capacity] = temp->parent->data;
+                        capacity++;
+                    }else{
+                        int* tempArray = (int*)realloc(path, size * sizeof(int) * 2);
+                        path = tempArray;
+                    }
+                    temp = temp->parent;
+                    max_reachable = temp->parent->data + maximumNode(temp->parent->cars)->data;
+                } else {
+                    if (temp->left->data > dest->data) {
+                        //moving to the left subtree
+                        temp = temp->left;
+                    } else if (temp->left->data < dest->data) {
+                        if (temp->left->right != NULL) {
+                            if (temp->left->right->data < dest->data) {
+                                temp = temp->left->right;
+                            } else {
+                                if (temp->right != NULL){
+                                    temp = temp->right;
+                                }
+                            }
+                        }else{
+                            printf("nessun percorso\n");
+                            free(path);
+                            path = NULL;
+                            break;
+                        }
+                    } else if (temp->left->data == dest->data) {
+                        if (capacity < size) {
+                            path[capacity] = temp->parent->data;
+                            capacity++;
+                        }else{
+                            int* tempArray = (int*)realloc(path, size * sizeof(int) * 2);
+                            path = tempArray;
+                        }
+                        break;
+                    } else {
+                        printf("nessun percorso\n");
+                        free(path);
+                        path = NULL;
+                        break;
+                    }
+                }
+            } else {
+                //TODO ora vediamo
+            }
+        }
+    }
+    if (path!=NULL){
+        for (int i = 0; i < capacity; i++) {
+            printf("%d ", path[i]);
         }
     }
 }
