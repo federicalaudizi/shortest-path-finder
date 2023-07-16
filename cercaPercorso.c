@@ -69,7 +69,7 @@ struct array *createDynamicArray(int initialCapacity) {
 struct MaxHeap *createMaxHeap(int capacity) {
     struct MaxHeap *heap = (struct MaxHeap *) malloc(sizeof(struct MaxHeap));
     if (heap == NULL) {
-        printf("Memory allocation failed.\n");
+
         return NULL;
     }
 
@@ -77,7 +77,6 @@ struct MaxHeap *createMaxHeap(int capacity) {
     heap->size = 0;
     heap->array = (int *) malloc(capacity * sizeof(int));
     if (heap->array == NULL) {
-        printf("Memory allocation failed.\n");
         free(heap);
         return NULL;
     }
@@ -110,7 +109,6 @@ void heapify(struct MaxHeap *heap, int index) {
 
 void insertMaxHeap(struct MaxHeap *heap, int value) {
     if (heap->size == heap->capacity) {
-        printf("Heap is full. Resizing...\n");
         heap->capacity *= 2;
         heap->array = (int *) realloc(heap->array, heap->capacity * sizeof(int));
     }
@@ -191,7 +189,7 @@ int main() {
             addStation(args, arg_count, stations);
         } else if (strcmp(args[0], "pianifica-percorso") == 0) {
         } else if (strcmp(args[0], "demolisci-stazione") == 0) {
-            removeStation(args,stations);
+            removeStation(args, stations);
         } else if (strcmp(args[0], "aggiungi-auto") == 0) {
             addCar(args, stations);
         } else if (strcmp(args[0], "rottama-auto") == 0) {
@@ -200,9 +198,6 @@ int main() {
         for (int i = 0; i < arg_count; i++) {
             args[i] = NULL;
         }
-    }
-    for (int i = 0; i < stations->size; ++i) {
-        printf("%d ", stations->data[i].value);
     }
     return 0;
 }
@@ -232,7 +227,7 @@ void removeElement(struct array *arr, int carIndex) {
     int j;
 
     // Shift the elements after the target element one position to the left
-    for (j = carIndex; j < arr->size-1; j++) {
+    for (j = carIndex; j < arr->size - 1; j++) {
         arr->data[j].value = arr->data[j + 1].value;
     }
 
@@ -251,7 +246,19 @@ int max_heap_search(struct MaxHeap *heap, int target) {
     return -1; // Element not found in the max heap
 }
 
+// Function to perform swim-up operation
+// Function to delete a given element from the max heap
+void deleteElement(struct MaxHeap *maxHeap, int index) {
 
+    // Swap the element with the last element in the heap
+    swap(&maxHeap->array[index], &maxHeap->array[maxHeap->size - 1]);
+
+    // Decrement the heap size to remove the last element (element to be deleted)
+    maxHeap->size--;
+
+    // Re-heapify the heap
+    heapify(maxHeap, index);
+}
 
 void addStation(char **args, int arg_count, struct array *stations) {
     int carIndex = insertSorted(stations, atoi(args[1]));
@@ -273,32 +280,30 @@ void addCar(char **args, struct array *stations) {
     }
 }
 
-void removeStation(char **args, struct array *stations){
+void removeStation(char **args, struct array *stations) {
     int stationIndex = binarySearch(stations, 0, stations->size, atoi(args[1]));
 
-    if (stationIndex == -1){
+    if (stationIndex == -1) {
         printf("non demolita\n");
-    } else{
+    } else {
         removeElement(stations, stationIndex);
         printf("demolita\n");
 
     }
 }
 
-void removeCar(char **args, struct array *stations){
+void removeCar(char **args, struct array *stations) {
     int stationIndex = binarySearch(stations, 0, stations->size, atoi(args[1]));
 
-    if (stationIndex == -1){
+    if (stationIndex == -1) {
         printf("non demolita\n");
-    } else{
+    } else {
         int carIndex = max_heap_search(stations->data[stationIndex].heap, atoi(args[1]));
-        if(carIndex == -1){
+        if (carIndex == -1) {
             printf("non demolita\n");
-        }else{
-
+        } else {
+            deleteElement(stations->data[stationIndex].heap, carIndex);
             printf("demolita\n");
         }
-
-
     }
 }
