@@ -34,6 +34,8 @@ void removeCar(char **args, struct array *stations);
 
 void directJourney(int departure, int arrival, struct array *stations);
 
+void indirectJourney(int departure, int arrival, struct array *stations);
+
 void resizeArray(struct array *arr) {
     struct element *newData = (struct element *) malloc(arr->capacity * 2 * sizeof(struct element));
 
@@ -158,7 +160,7 @@ int binarySearchStruct(struct array *arr, int start, int end, int target) {
     return -1; // Element not found
 }
 
-int binarySearch(const int *arr, int start, int end, int target) {
+int binarySearchAsc(const int *arr, int start, int end, int target) {
     while (start <= end) {
         int mid = start + (end - start) / 2;
 
@@ -174,6 +176,21 @@ int binarySearch(const int *arr, int start, int end, int target) {
     return -1; // Element not found
 }
 
+int binarySearchDesc(const int *arr, int start, int end, int target) {
+    while (start <= end) {
+        int mid = start + (end - start) / 2;
+
+        if (arr[mid] == target) {
+            return mid; // Element found, return its index
+        } else if (arr[mid] < target) {
+            end = mid - 1;// Target is in the end half
+        } else {
+            start = mid + 1; // Target is in the start half
+        }
+    }
+
+    return -1; // Element not found
+}
 
 int main() {
     char line[1000];
@@ -202,11 +219,15 @@ int main() {
         if (strcmp(args[0], "aggiungi-stazione") == 0) {
             addStation(args, arg_count, stations);
         } else if (strcmp(args[0], "pianifica-percorso") == 0) {
-            if (args[1] < args[2]) {
+            if (atoi(args[1]) < atoi(args[2])) {
                 //andata
                 directJourney(atoi(args[1]), atoi(args[2]), stations);
-            } else if (args[1] > args[2]) {
+            } else if (atoi(args[1]) > atoi(args[2])) {
                 //ritorno
+                if (atoi(args[1]) == 263){
+                    printf("");
+                }
+                indirectJourney(atoi(args[1]), atoi(args[2]), stations);
             } else {
                 printf("%d\n", atoi(args[1]));
             }
@@ -285,13 +306,16 @@ void deleteElement(struct MaxHeap *maxHeap, int index) {
 }
 
 void addStation(char **args, int arg_count, struct array *stations) {
-    int carIndex = insertSorted(stations, atoi(args[1]));
-
-    for (int i = 3; i < arg_count; i++) {
-        insertMaxHeap(stations->data[carIndex].heap, atoi(args[i]));
+    if (binarySearchStruct(stations, 0 , stations->size, atoi(args[1])) == -1 ){
+        int carIndex = insertSorted(stations, atoi(args[1]));
+        for (int i = 3; i < arg_count; i++) {
+            insertMaxHeap(stations->data[carIndex].heap, atoi(args[i]));
+        }
+        printf("aggiunta\n");
+    } else{
+        printf("non aggiunta\n");
     }
 
-    printf("aggiunta\n");
 }
 
 void addCar(char **args, struct array *stations) {
@@ -380,7 +404,66 @@ void directJourney(int dep, int arr, struct array *stations) {
         int target = prec[arraySize - 1];
 
         for (int i = 1; i < pathSize - 1; ++i) {
-            mapIndex = binarySearch(mapping, 0, arraySize, target);
+            mapIndex = binarySearchAsc(mapping, 0, arraySize, target);
+            path[i] = target;
+            target = prec[mapIndex];
+        }
+
+        for (int i = pathSize - 1; i >= 0; i--) {
+            printf("%d ", path[i]);
+        }
+        printf("\n");
+    }
+}
+
+void indirectJourney(int dep, int arr, struct array *stations){
+    int arrIndex = binarySearchStruct(stations, 0, stations->size, arr);
+    int depIndex = binarySearchStruct(stations, arrIndex, stations->size, dep);
+    int arraySize = depIndex - arrIndex + 1;
+    int prec[arraySize], costs[arraySize], mapping[arraySize];
+    int maxReachable, j;
+
+    costs[0] = 0;
+    prec[0] = 0;
+    mapping[0] = stations->data[depIndex].value;
+
+    for (int i = arraySize - 1; i >= 1; i--) {
+        costs[i] = 2147483647;
+        prec[i] = 2147483647;
+        mapping[i] = stations->data[depIndex - i].value;
+    }
+
+    for (int i = 0; i < arraySize; i++) {
+        j = i;
+        maxReachable = mapping[i] - getMax(stations->data[depIndex - i].heap);
+        while (maxReachable <= mapping[j + 1] && j < arraySize) {
+            if (costs[i] == 2147483647){
+                printf("nessun percorso\n");
+                return;
+            }else{
+                if (costs[j + 1] > costs[i] + 1) {
+                    costs[j + 1] = costs[i] + 1;
+                    prec[j + 1] = mapping[i];
+                }
+                j++;
+            }
+        }
+    }
+
+    if (prec[arraySize - 1] == 2147483647) {
+        printf("nessun percorso\n");
+    } else {
+        int pathSize = costs[arraySize - 1] + 1;
+        int path[pathSize];
+        int mapIndex;
+
+        path[0] = stations->data[arrIndex].value;
+        path[pathSize - 1] = stations->data[depIndex].value;
+
+        int target = prec[arraySize - 1];
+
+        for (int i = 1; i < pathSize - 1; ++i) {
+            mapIndex = binarySearchDesc(mapping, 0, arraySize, target);
             path[i] = target;
             target = prec[mapIndex];
         }
