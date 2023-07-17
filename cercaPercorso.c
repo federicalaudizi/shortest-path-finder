@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
+
 
 // Define the struct for each element in the array
 struct element {
@@ -30,6 +32,8 @@ void removeStation(char **args, struct array *stations);
 
 void removeCar(char **args, struct array *stations);
 
+void directJourney(int departure, int arrival, struct array *stations);
+
 void resizeArray(struct array *arr) {
     struct element *newData = (struct element *) malloc(arr->capacity * 2 * sizeof(struct element));
 
@@ -50,7 +54,6 @@ void freeDynamicArray(struct array *dynArray) {
     }
 }
 
-
 struct MaxHeap *createMaxHeap(int capacity);
 
 struct array *createDynamicArray(int initialCapacity) {
@@ -69,7 +72,6 @@ struct array *createDynamicArray(int initialCapacity) {
 struct MaxHeap *createMaxHeap(int capacity) {
     struct MaxHeap *heap = (struct MaxHeap *) malloc(sizeof(struct MaxHeap));
     if (heap == NULL) {
-
         return NULL;
     }
 
@@ -130,12 +132,7 @@ int getMax(struct MaxHeap *heap) {
         return -1; // Return -1 to indicate an empty heap or use an appropriate error code.
     }
 
-    int max = heap->array[0];
-    heap->array[0] = heap->array[heap->size - 1];
-    heap->size--;
-    heapify(heap, 0);
-
-    return max;
+    return heap->array[0];
 }
 
 void freeMaxHeap(struct MaxHeap *heap) {
@@ -145,7 +142,7 @@ void freeMaxHeap(struct MaxHeap *heap) {
     }
 }
 
-int binarySearch(struct array *arr, int start, int end, int target) {
+int binarySearchStruct(struct array *arr, int start, int end, int target) {
     while (start <= end) {
         int mid = start + (end - start) / 2;
 
@@ -160,6 +157,23 @@ int binarySearch(struct array *arr, int start, int end, int target) {
 
     return -1; // Element not found
 }
+
+int binarySearch(const int *arr, int start, int end, int target) {
+    while (start <= end) {
+        int mid = start + (end - start) / 2;
+
+        if (arr[mid] == target) {
+            return mid; // Element found, return its index
+        } else if (arr[mid] < target) {
+            start = mid + 1; // Target is in the end half
+        } else {
+            end = mid - 1; // Target is in the start half
+        }
+    }
+
+    return -1; // Element not found
+}
+
 
 int main() {
     char line[1000];
@@ -188,6 +202,14 @@ int main() {
         if (strcmp(args[0], "aggiungi-stazione") == 0) {
             addStation(args, arg_count, stations);
         } else if (strcmp(args[0], "pianifica-percorso") == 0) {
+            if (args[1] < args[2]) {
+                //andata
+                directJourney(atoi(args[1]), atoi(args[2]), stations);
+            } else if (args[1] > args[2]) {
+                //ritorno
+            } else {
+                printf("%d\n", atoi(args[1]));
+            }
         } else if (strcmp(args[0], "demolisci-stazione") == 0) {
             removeStation(args, stations);
         } else if (strcmp(args[0], "aggiungi-auto") == 0) {
@@ -199,6 +221,9 @@ int main() {
             args[i] = NULL;
         }
     }
+    for (int i = 0; i < stations->size; ++i) {
+        printf("%d ", getMax(stations->data[i].heap));
+    }
     return 0;
 }
 
@@ -208,17 +233,22 @@ int insertSorted(struct array *arr, int key) {
     if (arr->size >= arr->capacity)
         resizeArray(arr);
     int i;
+
     if (arr->size == 0) {
         arr->data[0].value = key;
         arr->size++;
         return 0;
     } else {
         for (i = arr->size - 1; (i >= 0 && arr->data[i].value > key); i--) {
-            arr->data[i + 1].value = arr->data[i].value;
+            arr->data[i + 1] = arr->data[i];
         }
     }
 
     arr->data[i + 1].value = key;
+    for (int j = 0; j < arr->data[i+1].heap->size; ++j) {
+        arr->data[i+1].heap->array[i] = 0;
+    }
+    arr->data[i+1].heap->size = 0;
     arr->size++;
     return i + 1;
 }
@@ -246,7 +276,6 @@ int max_heap_search(struct MaxHeap *heap, int target) {
     return -1; // Element not found in the max heap
 }
 
-// Function to perform swim-up operation
 // Function to delete a given element from the max heap
 void deleteElement(struct MaxHeap *maxHeap, int index) {
 
@@ -271,17 +300,18 @@ void addStation(char **args, int arg_count, struct array *stations) {
 }
 
 void addCar(char **args, struct array *stations) {
-    int carIndex = binarySearch(stations, 0, stations->size, atoi(args[1]));
+    int carIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
 
     if (carIndex == -1) {
         printf("non aggiunta\n");
     } else {
         insertMaxHeap(stations->data[carIndex].heap, atoi(args[2]));
+        printf("aggiunta\n");
     }
 }
 
 void removeStation(char **args, struct array *stations) {
-    int stationIndex = binarySearch(stations, 0, stations->size, atoi(args[1]));
+    int stationIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
 
     if (stationIndex == -1) {
         printf("non demolita\n");
@@ -293,7 +323,7 @@ void removeStation(char **args, struct array *stations) {
 }
 
 void removeCar(char **args, struct array *stations) {
-    int stationIndex = binarySearch(stations, 0, stations->size, atoi(args[1]));
+    int stationIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
 
     if (stationIndex == -1) {
         printf("non demolita\n");
@@ -305,5 +335,69 @@ void removeCar(char **args, struct array *stations) {
             deleteElement(stations->data[stationIndex].heap, carIndex);
             printf("demolita\n");
         }
+    }
+}
+
+void directJourney(int dep, int arr, struct array *stations) {
+    int depIndex = binarySearchStruct(stations, 0, stations->size, dep);
+    int arrIndex = binarySearchStruct(stations, depIndex, stations->size, arr);
+    int arraySize = arrIndex - depIndex + 1;
+    int prec[arraySize], costs[arraySize], mapping[arraySize];
+    int maxReachable, j;
+
+    costs[0] = 0;
+    prec[0] = 0;
+    mapping[0] = stations->data[depIndex].value;
+
+    if (dep == 35){
+        printf("bug");
+    }
+
+    for (int i = 1; i < arraySize; i++) {
+        costs[i] = 2147483647;
+        prec[i] = 2147483647;
+        mapping[i] = stations->data[depIndex + i].value;
+    }
+
+    for (int i = 0; i < arraySize; i++) {
+        j = i;
+        maxReachable = mapping[i] + getMax(stations->data[depIndex + i].heap);
+        while (maxReachable >= mapping[j + 1] && j < arraySize) {
+            if (costs[i] == 2147483647){
+                printf("nessun percorso\n");
+                return;
+            }else{
+                if (costs[j + 1] > costs[i] + 1) {
+                    costs[j + 1] = costs[i] + 1;
+                    prec[j + 1] = mapping[i];
+                }
+                j++;
+            }
+        }
+    }
+
+    if (prec[arraySize - 1] == 2147483647) {
+        printf("nessun percorso\n");
+    } else {
+        int pathSize = costs[arraySize - 1] + 1;
+        int path[pathSize];
+        int mapIndex;
+
+        path[0] = stations->data[arrIndex].value;
+        path[pathSize - 1] = stations->data[depIndex].value;
+
+        int target = prec[arraySize - 1];
+
+        for (int i = 1; i < pathSize - 1; ++i) {
+            mapIndex = binarySearch(mapping, 0, arraySize, target);
+            path[i] = target;
+            target = prec[mapIndex];
+        }
+
+        for (int i = pathSize - 1; i >= 0; i--) {
+            printf("%d ", path[i]);
+        }
+        printf("\n");
+
     }
 }
