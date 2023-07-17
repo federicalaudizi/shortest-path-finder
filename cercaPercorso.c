@@ -221,9 +221,6 @@ int main() {
             args[i] = NULL;
         }
     }
-    for (int i = 0; i < stations->size; ++i) {
-        printf("%d ", getMax(stations->data[i].heap));
-    }
     return 0;
 }
 
@@ -245,11 +242,9 @@ int insertSorted(struct array *arr, int key) {
     }
 
     arr->data[i + 1].value = key;
-    for (int j = 0; j < arr->data[i+1].heap->size; ++j) {
-        arr->data[i+1].heap->array[i] = 0;
-    }
-    arr->data[i+1].heap->size = 0;
+    arr->data[i + 1].heap = createMaxHeap(512);
     arr->size++;
+
     return i + 1;
 }
 
@@ -349,10 +344,6 @@ void directJourney(int dep, int arr, struct array *stations) {
     prec[0] = 0;
     mapping[0] = stations->data[depIndex].value;
 
-    if (dep == 35){
-        printf("bug");
-    }
-
     for (int i = 1; i < arraySize; i++) {
         costs[i] = 2147483647;
         prec[i] = 2147483647;
@@ -398,6 +389,5 @@ void directJourney(int dep, int arr, struct array *stations) {
             printf("%d ", path[i]);
         }
         printf("\n");
-
     }
 }
