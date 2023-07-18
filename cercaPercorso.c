@@ -276,16 +276,17 @@ int insertSorted(struct array *arr, int key) {
 
     if (arr->size == 0) {
         arr->data[0].value = key;
+        arr->data[0].heap = createMaxHeap(32);
         arr->size++;
         return 0;
     } else {
         for (i = arr->size - 1; (i >= 0 && arr->data[i].value > key); i--) {
             arr->data[i + 1] = arr->data[i];
         }
+        arr->data[i + 1].value = key;
+        arr->data[i + 1].heap = createMaxHeap(32);
     }
 
-    arr->data[i + 1].value = key;
-    arr->data[i + 1].heap = createMaxHeap(512);
     arr->size++;
 
     return i + 1;
@@ -294,12 +295,16 @@ int insertSorted(struct array *arr, int key) {
 void removeElement(struct array *arr, int carIndex) {
     int j;
 
+    //todo caso limite solo due stazioni
+
     // Shift the elements after the target element one position to the left
     for (j = carIndex; j < arr->size - 1; j++) {
-        arr->data[j].value = arr->data[j + 1].value;
+        arr->data[j] = arr->data[j + 1];
     }
 
-    freeMaxHeap(arr->data->heap);
+    arr->data[arr->size-1].heap = NULL;
+    arr->data[arr->size-1].value = 0;
+
     // Decrement the size of the array
     arr->size--;
 }
@@ -331,7 +336,7 @@ void addStation(char **args, int arg_count, struct array *stations) {
     if (binarySearchStruct(stations, 0 , stations->size, atoi(args[1])) == -1 ){
         int carIndex = insertSorted(stations, atoi(args[1]));
         for (int i = 3; i < arg_count; i++) {
-            if (stations->data[carIndex].heap->size == stations->data[carIndex].heap->capacity){
+            if (stations->data[carIndex].heap->size == stations->data[carIndex].heap->capacity || arg_count-3 > stations->data[carIndex].heap->capacity){
                 resizeMaxHeap(stations->data[carIndex].heap);
             }
             insertMaxHeap(stations->data[carIndex].heap, atoi(args[i]));
@@ -370,14 +375,14 @@ void removeCar(char **args, struct array *stations) {
     int stationIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
 
     if (stationIndex == -1) {
-        printf("non demolita\n");
+        printf("non rottamata\n");
     } else {
         int carIndex = max_heap_search(stations->data[stationIndex].heap, atoi(args[1]));
         if (carIndex == -1) {
-            printf("non demolita\n");
+            printf("non rottamata\n");
         } else {
             deleteElement(stations->data[stationIndex].heap, carIndex);
-            printf("demolita\n");
+            printf("rottamata\n");
         }
     }
 }
