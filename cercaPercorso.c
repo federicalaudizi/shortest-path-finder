@@ -49,6 +49,26 @@ void resizeArray(struct array *arr) {
     arr->capacity = arr->capacity * 2;
 }
 
+// Function to resize the MaxHeap
+void resizeMaxHeap(struct MaxHeap *heap) {
+    int newCapacity = heap->capacity * 2;
+
+    // Allocate memory for the new array
+    int *newArray = (int *)malloc(newCapacity * sizeof(int));
+
+    // Copy elements from the old array to the new array
+    for (int i = 0; i < heap->size; i++) {
+        newArray[i] = heap->array[i];
+    }
+
+    // Deallocate the old array
+    free(heap->array);
+
+    // Update the heap struct with the new array and capacity
+    heap->array = newArray;
+    heap->capacity = newCapacity;
+}
+
 void freeDynamicArray(struct array *dynArray) {
     if (dynArray) {
         free(dynArray->data);
@@ -65,7 +85,7 @@ struct array *createDynamicArray(int initialCapacity) {
     dynArray->size = 0;
     dynArray->data = (struct element *) malloc(initialCapacity * sizeof(struct element));
     for (int i = 0; i < initialCapacity; ++i) {
-        dynArray->data[i].heap = createMaxHeap(512);
+        dynArray->data[i].heap = createMaxHeap(32);
     }
 
     return dynArray;
@@ -224,9 +244,6 @@ int main() {
                 directJourney(atoi(args[1]), atoi(args[2]), stations);
             } else if (atoi(args[1]) > atoi(args[2])) {
                 //ritorno
-                if (atoi(args[1]) == 263){
-                    printf("");
-                }
                 indirectJourney(atoi(args[1]), atoi(args[2]), stations);
             } else {
                 printf("%d\n", atoi(args[1]));
@@ -242,6 +259,11 @@ int main() {
             args[i] = NULL;
         }
     }
+    for (int i = 0; i < stations->size; ++i) {
+        freeMaxHeap(stations->data[i].heap);
+    }
+
+    freeDynamicArray(stations);
     return 0;
 }
 
@@ -309,6 +331,9 @@ void addStation(char **args, int arg_count, struct array *stations) {
     if (binarySearchStruct(stations, 0 , stations->size, atoi(args[1])) == -1 ){
         int carIndex = insertSorted(stations, atoi(args[1]));
         for (int i = 3; i < arg_count; i++) {
+            if (stations->data[carIndex].heap->size == stations->data[carIndex].heap->capacity){
+                resizeMaxHeap(stations->data[carIndex].heap);
+            }
             insertMaxHeap(stations->data[carIndex].heap, atoi(args[i]));
         }
         printf("aggiunta\n");
@@ -441,7 +466,7 @@ void indirectJourney(int dep, int arr, struct array *stations){
                 printf("nessun percorso\n");
                 return;
             }else{
-                if (costs[j + 1] > costs[i] + 1) {
+                if (costs[j + 1] >= costs[i] + 1) {
                     costs[j + 1] = costs[i] + 1;
                     prec[j + 1] = mapping[i];
                 }
