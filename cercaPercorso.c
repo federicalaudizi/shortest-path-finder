@@ -377,7 +377,7 @@ void removeCar(char **args, struct array *stations) {
     if (stationIndex == -1) {
         printf("non rottamata\n");
     } else {
-        int carIndex = max_heap_search(stations->data[stationIndex].heap, atoi(args[1]));
+        int carIndex = max_heap_search(stations->data[stationIndex].heap, atoi(args[2]));
         if (carIndex == -1) {
             printf("non rottamata\n");
         } else {
@@ -439,10 +439,10 @@ void directJourney(int dep, int arr, struct array *stations) {
             target = prec[mapIndex];
         }
 
-        for (int i = pathSize - 1; i >= 0; i--) {
+        for (int i = pathSize - 1; i > 0; i--) {
             printf("%d ", path[i]);
         }
-        printf("\n");
+        printf("%d\n", path[0]);
     }
 }
 
