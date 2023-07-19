@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <math.h>
 
+#define max_args 515
 
 // Define the struct for each element in the array
 struct element {
@@ -215,17 +216,19 @@ int binarySearchDesc(const int *arr, int start, int end, int target) {
 int main() {
     char line[10000];
     char *word;
-    char *args[515];
-    int arg_count;
+    char *args[max_args];
+    int arg_count = 0;
 
     struct array *stations = createDynamicArray(50);
 
+    for (int i = 0; i < max_args; i++) {
+        args[i] = NULL;
+    }
 
     while (fgets(line, sizeof(line), stdin) != NULL) {
         // Extract individual words from the line
         word = strtok(line, " \t\n");  // Split the line by spaces, tabs, and newlines
         arg_count = 0;
-
 
         while (word != NULL) {
             // Store the word in the arguments array
