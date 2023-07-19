@@ -239,9 +239,9 @@ int main() {
         }
 
         // Check the command and perform the corresponding action
-        if (strcmp(args[0], "aggiungi-stazione") == 0) {
+        if (arg_count > 0 && strcmp(args[0], "aggiungi-stazione") == 0) {
             addStation(args, arg_count, stations);
-        } else if (strcmp(args[0], "pianifica-percorso") == 0) {
+        } else if (arg_count > 0 && strcmp(args[0], "pianifica-percorso") == 0) {
             if (atoi(args[1]) < atoi(args[2])) {
                 //andata
                 directJourney(atoi(args[1]), atoi(args[2]), stations);
@@ -251,11 +251,11 @@ int main() {
             } else {
                 printf("%d\n", atoi(args[1]));
             }
-        } else if (strcmp(args[0], "demolisci-stazione") == 0) {
+        } else if (arg_count > 0 && strcmp(args[0], "demolisci-stazione") == 0) {
             removeStation(args, stations);
-        } else if (strcmp(args[0], "aggiungi-auto") == 0) {
+        } else if (arg_count > 0 && strcmp(args[0], "aggiungi-auto") == 0) {
             addCar(args, stations);
-        } else if (strcmp(args[0], "rottama-auto") == 0) {
+        } else if (arg_count > 0 && strcmp(args[0], "rottama-auto") == 0) {
             removeCar(args, stations);
         }
         for (int i = 0; i < arg_count; i++) {
