@@ -213,7 +213,7 @@ int binarySearchDesc(const int *arr, int start, int end, int target) {
 }
 
 int main() {
-    char line[1000];
+    char line[10000];
     char *word;
     char *args[515];
     int arg_count;
@@ -498,9 +498,9 @@ void indirectJourney(int dep, int arr, struct array *stations){
             target = prec[mapIndex];
         }
 
-        for (int i = pathSize - 1; i >= 0; i--) {
+        for (int i = pathSize - 1; i > 0; i--) {
             printf("%d ", path[i]);
         }
-        printf("\n");
+        printf("%d\n", path[0]);
     }
 }
