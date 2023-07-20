@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <math.h>
 
 #define max_args 515
 
@@ -25,27 +23,26 @@ struct MaxHeap {
 };
 
 
-void addStation(char **args, int arg_count, struct array *stations);
+static void addStation(char **args, int arg_count, struct array *stations);
 
-void addCar(char **args, struct array *stations);
+static void addCar(char **args, struct array *stations);
 
-void removeStation(char **args, struct array *stations);
+static void removeStation(char **args, struct array *stations);
 
-void removeCar(char **args, struct array *stations);
+static void removeCar(char **args, struct array *stations);
 
-void directJourney(int departure, int arrival, struct array *stations);
+static void directJourney(int departure, int arrival, struct array *stations);
 
-void indirectJourney(int departure, int arrival, struct array *stations);
+static void indirectJourney(int departure, int arrival, struct array *stations);
 
-struct MaxHeap *createMaxHeap(int capacity);
+static struct MaxHeap *createMaxHeap(int capacity);
 
-void resizeArray(struct array *arr) {
+static void resizeArray(struct array *arr) {
     struct element *newData = (struct element *) malloc(arr->capacity * 2 * sizeof(struct element));
 
     for (int i = 0; i < arr->size; i++) {
         newData[i] = arr->data[i];
     }
-
 
     free(arr->data);
     arr->data = newData;
@@ -58,7 +55,7 @@ void resizeArray(struct array *arr) {
 }
 
 // Function to resize the MaxHeap
-void resizeMaxHeap(struct MaxHeap *heap) {
+static void resizeMaxHeap(struct MaxHeap *heap) {
     int newCapacity = heap->capacity * 2;
 
     // Allocate memory for the new array
@@ -77,29 +74,21 @@ void resizeMaxHeap(struct MaxHeap *heap) {
     heap->capacity = newCapacity;
 }
 
-void freeDynamicArray(struct array *dynArray) {
+static void freeDynamicArray(struct array *dynArray) {
     if (dynArray) {
         free(dynArray->data);
         free(dynArray);
     }
 }
 
-struct array *createDynamicArray(int initialCapacity) {
+static struct array *createDynamicArray(int initialCapacity) {
     struct array *dynArray = (struct array *) malloc(sizeof(struct array));
-    if (dynArray == NULL) {
-        // Handle memory allocation failure
-        return NULL;
-    }
 
 
     dynArray->capacity = initialCapacity;
     dynArray->size = 0;
     dynArray->data = (struct element *) malloc(initialCapacity * sizeof(struct element));
-    if (dynArray->data == NULL) {
-        // Handle memory allocation failure
-        free(dynArray);
-        return NULL;
-    }
+
     for (int i = 0; i < initialCapacity; ++i) {
         dynArray->data[i].value = 0;
         dynArray->data[i].heap = createMaxHeap(32);
@@ -108,7 +97,7 @@ struct array *createDynamicArray(int initialCapacity) {
     return dynArray;
 }
 
-struct MaxHeap *createMaxHeap(int capacity) {
+static struct MaxHeap *createMaxHeap(int capacity) {
     struct MaxHeap *heap = (struct MaxHeap *) malloc(sizeof(struct MaxHeap));
     if (heap == NULL) {
         return NULL;
@@ -127,13 +116,13 @@ struct MaxHeap *createMaxHeap(int capacity) {
     return heap;
 }
 
-void swap(int *a, int *b) {
+static void swap(int *a, int *b) {
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-void heapify(struct MaxHeap *heap, int index) {
+static void heapify(struct MaxHeap *heap, int index) {
     int largest = index;
     int left = 2 * index + 1;
     int right = 2 * index + 2;
@@ -150,7 +139,7 @@ void heapify(struct MaxHeap *heap, int index) {
     }
 }
 
-void insertMaxHeap(struct MaxHeap *heap, int value) {
+static void insertMaxHeap(struct MaxHeap *heap, int value) {
     if (heap->size == heap->capacity) {
         heap->capacity *= 2;
         heap->array = (int *) realloc(heap->array, heap->capacity * sizeof(int));
@@ -168,7 +157,7 @@ void insertMaxHeap(struct MaxHeap *heap, int value) {
     }
 }
 
-int getMax(struct MaxHeap *heap) {
+static int getMax(struct MaxHeap *heap) {
     if (heap->size == 0) {
         return -1; // Return -1 to indicate an empty heap or use an appropriate error code.
     }
@@ -176,14 +165,14 @@ int getMax(struct MaxHeap *heap) {
     return heap->array[0];
 }
 
-void freeMaxHeap(struct MaxHeap *heap) {
+static void freeMaxHeap(struct MaxHeap *heap) {
     if (heap) {
         free(heap->array);
         free(heap);
     }
 }
 
-int binarySearchStruct(struct array *arr, int start, int end, int target) {
+static int binarySearchStruct(struct array *arr, int start, int end, int target) {
     while (start <= end) {
         int mid = start + (end - start) / 2;
 
@@ -199,7 +188,7 @@ int binarySearchStruct(struct array *arr, int start, int end, int target) {
     return -1; // Element not found
 }
 
-int binarySearchAsc(const int *arr, int start, int end, int target) {
+static int binarySearchAsc(const int *arr, int start, int end, int target) {
     while (start <= end) {
         int mid = start + (end - start) / 2;
 
@@ -215,7 +204,7 @@ int binarySearchAsc(const int *arr, int start, int end, int target) {
     return -1; // Element not found
 }
 
-int binarySearchDesc(const int *arr, int start, int end, int target) {
+static int binarySearchDesc(const int *arr, int start, int end, int target) {
     while (start <= end) {
         int mid = start + (end - start) / 2;
 
@@ -233,11 +222,12 @@ int binarySearchDesc(const int *arr, int start, int end, int target) {
 
 int main() {
     char line[10000];
-    char *word;
+    char *word = NULL;
     char *args[max_args];
-    int arg_count = 0;
+    int arg_count;
 
     struct array *stations = createDynamicArray(50);
+
 
     for (int i = 0; i < max_args; i++) {
         args[i] = NULL;
@@ -285,11 +275,12 @@ int main() {
     return 0;
 }
 
-int insertSorted(struct array *arr, int key) {
+static int insertSorted(struct array *arr, int key) {
     // Cannot insert more elements if n is already
     // more than or equal to capacity
     if (arr->size >= arr->capacity)
         resizeArray(arr);
+
     int i;
 
     if (arr->size == 0) {
@@ -310,7 +301,7 @@ int insertSorted(struct array *arr, int key) {
     return i + 1;
 }
 
-void removeElement(struct array *arr, int carIndex) {
+static void removeElement(struct array *arr, int carIndex) {
     int j;
 
     //todo caso limite solo due stazioni
@@ -327,7 +318,7 @@ void removeElement(struct array *arr, int carIndex) {
     arr->size--;
 }
 
-int max_heap_search(struct MaxHeap *heap, int target) {
+static int max_heap_search(struct MaxHeap *heap, int target) {
     for (int i = 0; i < heap->size; i++) {
         if (heap->array[i] == target) {
             return i; // Found the element at index i
@@ -338,7 +329,7 @@ int max_heap_search(struct MaxHeap *heap, int target) {
 }
 
 // Function to delete a given element from the max heap
-void deleteElement(struct MaxHeap *maxHeap, int index) {
+static void deleteElement(struct MaxHeap *maxHeap, int index) {
 
     // Swap the element with the last element in the heap
     swap(&maxHeap->array[index], &maxHeap->array[maxHeap->size - 1]);
@@ -350,7 +341,7 @@ void deleteElement(struct MaxHeap *maxHeap, int index) {
     heapify(maxHeap, index);
 }
 
-void addStation(char **args, int arg_count, struct array *stations) {
+static void addStation(char **args, int arg_count, struct array *stations) {
     if (binarySearchStruct(stations, 0, stations->size, atoi(args[1])) == -1) {
         int carIndex = insertSorted(stations, atoi(args[1]));
         for (int i = 3; i < arg_count; i++) {
@@ -367,7 +358,7 @@ void addStation(char **args, int arg_count, struct array *stations) {
 
 }
 
-void addCar(char **args, struct array *stations) {
+static void addCar(char **args, struct array *stations) {
     int carIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
 
     if (carIndex == -1) {
@@ -378,7 +369,7 @@ void addCar(char **args, struct array *stations) {
     }
 }
 
-void removeStation(char **args, struct array *stations) {
+static void removeStation(char **args, struct array *stations) {
     int stationIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
 
     if (stationIndex == -1) {
@@ -390,7 +381,7 @@ void removeStation(char **args, struct array *stations) {
     }
 }
 
-void removeCar(char **args, struct array *stations) {
+static void removeCar(char **args, struct array *stations) {
     int stationIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
 
     if (stationIndex == -1) {
@@ -406,9 +397,9 @@ void removeCar(char **args, struct array *stations) {
     }
 }
 
-void directJourney(int dep, int arr, struct array *stations) {
-    int depIndex = binarySearchStruct(stations, 0, stations->size, dep);
-    int arrIndex = binarySearchStruct(stations, depIndex, stations->size, arr);
+static void directJourney(int dep, int arr, struct array *stations) {
+    int depIndex = binarySearchStruct(stations, 0, stations->size-1, dep);
+    int arrIndex = binarySearchStruct(stations, depIndex, stations->size-1, arr);
     int arraySize = arrIndex - depIndex + 1;
     int prec[arraySize], costs[arraySize], mapping[arraySize];
     int maxReachable, j;
@@ -465,7 +456,7 @@ void directJourney(int dep, int arr, struct array *stations) {
     }
 }
 
-void indirectJourney(int dep, int arr, struct array *stations) {
+static void indirectJourney(int dep, int arr, struct array *stations) {
     int arrIndex = binarySearchStruct(stations, 0, stations->size, arr);
     int depIndex = binarySearchStruct(stations, arrIndex, stations->size, dep);
     int arraySize = depIndex - arrIndex + 1;
