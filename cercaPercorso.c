@@ -37,17 +37,24 @@ void directJourney(int departure, int arrival, struct array *stations);
 
 void indirectJourney(int departure, int arrival, struct array *stations);
 
+struct MaxHeap *createMaxHeap(int capacity);
+
 void resizeArray(struct array *arr) {
     struct element *newData = (struct element *) malloc(arr->capacity * 2 * sizeof(struct element));
-
 
     for (int i = 0; i < arr->size; i++) {
         newData[i] = arr->data[i];
     }
 
+
     free(arr->data);
     arr->data = newData;
     arr->capacity = arr->capacity * 2;
+
+    for (int i = arr->size; i < arr->capacity; ++i) {
+        arr->data[i].value = 0;
+        arr->data[i].heap = createMaxHeap(32);
+    }
 }
 
 // Function to resize the MaxHeap
@@ -55,7 +62,7 @@ void resizeMaxHeap(struct MaxHeap *heap) {
     int newCapacity = heap->capacity * 2;
 
     // Allocate memory for the new array
-    int *newArray = (int *)malloc(newCapacity * sizeof(int));
+    int *newArray = (int *) malloc(newCapacity * sizeof(int));
 
     // Copy elements from the old array to the new array
     for (int i = 0; i < heap->size; i++) {
@@ -77,15 +84,24 @@ void freeDynamicArray(struct array *dynArray) {
     }
 }
 
-struct MaxHeap *createMaxHeap(int capacity);
-
 struct array *createDynamicArray(int initialCapacity) {
     struct array *dynArray = (struct array *) malloc(sizeof(struct array));
+    if (dynArray == NULL) {
+        // Handle memory allocation failure
+        return NULL;
+    }
+
 
     dynArray->capacity = initialCapacity;
     dynArray->size = 0;
     dynArray->data = (struct element *) malloc(initialCapacity * sizeof(struct element));
+    if (dynArray->data == NULL) {
+        // Handle memory allocation failure
+        free(dynArray);
+        return NULL;
+    }
     for (int i = 0; i < initialCapacity; ++i) {
+        dynArray->data[i].value = 0;
         dynArray->data[i].heap = createMaxHeap(32);
     }
 
@@ -105,7 +121,9 @@ struct MaxHeap *createMaxHeap(int capacity) {
         free(heap);
         return NULL;
     }
-
+    for (int i = 0; i < capacity; ++i) {
+        heap->array[i] = 0; // Initialize the integer value of the element
+    }
     return heap;
 }
 
@@ -258,9 +276,6 @@ int main() {
         } else if (arg_count > 0 && strcmp(args[0], "rottama-auto") == 0) {
             removeCar(args, stations);
         }
-        for (int i = 0; i < arg_count; i++) {
-            args[i] = NULL;
-        }
     }
     for (int i = 0; i < stations->size; ++i) {
         freeMaxHeap(stations->data[i].heap);
@@ -305,8 +320,8 @@ void removeElement(struct array *arr, int carIndex) {
         arr->data[j] = arr->data[j + 1];
     }
 
-    arr->data[arr->size-1].heap = NULL;
-    arr->data[arr->size-1].value = 0;
+    arr->data[arr->size - 1].heap = NULL;
+    arr->data[arr->size - 1].value = 0;
 
     // Decrement the size of the array
     arr->size--;
@@ -336,16 +351,17 @@ void deleteElement(struct MaxHeap *maxHeap, int index) {
 }
 
 void addStation(char **args, int arg_count, struct array *stations) {
-    if (binarySearchStruct(stations, 0 , stations->size, atoi(args[1])) == -1 ){
+    if (binarySearchStruct(stations, 0, stations->size, atoi(args[1])) == -1) {
         int carIndex = insertSorted(stations, atoi(args[1]));
         for (int i = 3; i < arg_count; i++) {
-            if (stations->data[carIndex].heap->size == stations->data[carIndex].heap->capacity || arg_count-3 > stations->data[carIndex].heap->capacity){
+            if (stations->data[carIndex].heap->size == stations->data[carIndex].heap->capacity ||
+                arg_count - 3 > stations->data[carIndex].heap->capacity) {
                 resizeMaxHeap(stations->data[carIndex].heap);
             }
             insertMaxHeap(stations->data[carIndex].heap, atoi(args[i]));
         }
         printf("aggiunta\n");
-    } else{
+    } else {
         printf("non aggiunta\n");
     }
 
@@ -411,10 +427,10 @@ void directJourney(int dep, int arr, struct array *stations) {
         j = i;
         maxReachable = mapping[i] + getMax(stations->data[depIndex + i].heap);
         while (maxReachable >= mapping[j + 1] && j < arraySize) {
-            if (costs[i] == 2147483647){
+            if (costs[i] == 2147483647) {
                 printf("nessun percorso\n");
                 return;
-            }else{
+            } else {
                 if (costs[j + 1] > costs[i] + 1) {
                     costs[j + 1] = costs[i] + 1;
                     prec[j + 1] = mapping[i];
@@ -449,7 +465,7 @@ void directJourney(int dep, int arr, struct array *stations) {
     }
 }
 
-void indirectJourney(int dep, int arr, struct array *stations){
+void indirectJourney(int dep, int arr, struct array *stations) {
     int arrIndex = binarySearchStruct(stations, 0, stations->size, arr);
     int depIndex = binarySearchStruct(stations, arrIndex, stations->size, dep);
     int arraySize = depIndex - arrIndex + 1;
@@ -470,10 +486,10 @@ void indirectJourney(int dep, int arr, struct array *stations){
         j = i;
         maxReachable = mapping[i] - getMax(stations->data[depIndex - i].heap);
         while (maxReachable <= mapping[j + 1] && j < arraySize) {
-            if (costs[i] == 2147483647){
+            if (costs[i] == 2147483647) {
                 printf("nessun percorso\n");
                 return;
-            }else{
+            } else {
                 if (costs[j + 1] >= costs[i] + 1) {
                     costs[j + 1] = costs[i] + 1;
                     prec[j + 1] = mapping[i];
