@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
-#define max_args 515
+
+#define max_args 1000
 
 // Define the struct for each element in the array
 struct element {
@@ -38,15 +40,11 @@ static void indirectJourney(int departure, int arrival, struct array *stations);
 static struct MaxHeap *createMaxHeap(int capacity);
 
 static void resizeArray(struct array *arr) {
-    struct element *newData = (struct element *) malloc(arr->capacity * 2 * sizeof(struct element));
+    size_t newCapacity = arr->capacity + (arr->capacity /2);
+    struct element *newData = (struct element *) realloc(arr->data, newCapacity * sizeof(struct element));
 
-    for (int i = 0; i < arr->size; i++) {
-        newData[i] = arr->data[i];
-    }
-
-    free(arr->data);
     arr->data = newData;
-    arr->capacity = arr->capacity * 2;
+    arr->capacity = arr->capacity + (arr->capacity /2);
 
     for (int i = arr->size; i < arr->capacity; ++i) {
         arr->data[i].value = 0;
@@ -176,7 +174,7 @@ static int binarySearchStruct(struct array *arr, int start, int end, int target)
     while (start <= end) {
         int mid = start + (end - start) / 2;
 
-        if (arr->data[mid].value == target) {
+        if (arr->size <= mid && arr->data[mid].value == target) {
             return mid; // Element found, return its index
         } else if (arr->data[mid].value < target) {
             start = mid + 1; // Target is in the end half
@@ -238,7 +236,7 @@ int main() {
         word = strtok(line, " \t\n");  // Split the line by spaces, tabs, and newlines
         arg_count = 0;
 
-        while (word != NULL) {
+        while (word != NULL && arg_count<=515) {
             // Store the word in the arguments array
             args[arg_count++] = word;
 
@@ -409,16 +407,16 @@ static void directJourney(int dep, int arr, struct array *stations) {
     mapping[0] = stations->data[depIndex].value;
 
     for (int i = 1; i < arraySize; i++) {
-        costs[i] = 2147483647;
-        prec[i] = 2147483647;
+        costs[i] = INT_MAX;
+        prec[i] = INT_MAX;
         mapping[i] = stations->data[depIndex + i].value;
     }
 
     for (int i = 0; i < arraySize; i++) {
         j = i;
         maxReachable = mapping[i] + getMax(stations->data[depIndex + i].heap);
-        while (maxReachable >= mapping[j + 1] && j < arraySize) {
-            if (costs[i] == 2147483647) {
+        while (j < arraySize - 1 && maxReachable >= mapping[j + 1]) {
+            if (costs[i] == INT_MAX) {
                 printf("nessun percorso\n");
                 return;
             } else {
@@ -431,7 +429,7 @@ static void directJourney(int dep, int arr, struct array *stations) {
         }
     }
 
-    if (prec[arraySize - 1] == 2147483647) {
+    if (prec[arraySize - 1] == INT_MAX) {
         printf("nessun percorso\n");
     } else {
         int pathSize = costs[arraySize - 1] + 1;
@@ -468,16 +466,16 @@ static void indirectJourney(int dep, int arr, struct array *stations) {
     mapping[0] = stations->data[depIndex].value;
 
     for (int i = arraySize - 1; i >= 1; i--) {
-        costs[i] = 2147483647;
-        prec[i] = 2147483647;
+        costs[i] = INT_MAX;
+        prec[i] = INT_MAX;
         mapping[i] = stations->data[depIndex - i].value;
     }
 
     for (int i = 0; i < arraySize; i++) {
         j = i;
         maxReachable = mapping[i] - getMax(stations->data[depIndex - i].heap);
-        while (maxReachable <= mapping[j + 1] && j < arraySize) {
-            if (costs[i] == 2147483647) {
+        while (j < arraySize - 1 && maxReachable <= mapping[j + 1]) {
+            if (costs[i] == INT_MAX) {
                 printf("nessun percorso\n");
                 return;
             } else {
@@ -490,7 +488,7 @@ static void indirectJourney(int dep, int arr, struct array *stations) {
         }
     }
 
-    if (prec[arraySize - 1] == 2147483647) {
+    if (prec[arraySize - 1] == INT_MAX) {
         printf("nessun percorso\n");
     } else {
         int pathSize = costs[arraySize - 1] + 1;
