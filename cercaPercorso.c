@@ -105,7 +105,6 @@ static struct MaxHeap *createMaxHeap(int capacity) {
     heap->size = 0;
     heap->array = (int *) malloc(capacity * sizeof(int));
     if (heap->array == NULL) {
-        free(heap);
         return NULL;
     }
     for (int i = 0; i < capacity; ++i) {
