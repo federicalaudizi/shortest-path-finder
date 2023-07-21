@@ -174,7 +174,7 @@ static int binarySearchStruct(struct array *arr, int start, int end, int target)
     while (start <= end) {
         int mid = start + (end - start) / 2;
 
-        if (arr->size <= mid && arr->data[mid].value == target) {
+        if (arr->data[mid].value == target) {
             return mid; // Element found, return its index
         } else if (arr->data[mid].value < target) {
             start = mid + 1; // Target is in the end half
@@ -340,7 +340,7 @@ static void deleteElement(struct MaxHeap *maxHeap, int index) {
 }
 
 static void addStation(char **args, int arg_count, struct array *stations) {
-    if (binarySearchStruct(stations, 0, stations->size, atoi(args[1])) == -1) {
+    if (binarySearchStruct(stations, 0, stations->size - 1, atoi(args[1])) == -1) {
         int carIndex = insertSorted(stations, atoi(args[1]));
         for (int i = 3; i < arg_count; i++) {
             if (stations->data[carIndex].heap->size == stations->data[carIndex].heap->capacity ||
@@ -357,7 +357,7 @@ static void addStation(char **args, int arg_count, struct array *stations) {
 }
 
 static void addCar(char **args, struct array *stations) {
-    int carIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
+    int carIndex = binarySearchStruct(stations, 0, stations->size - 1, atoi(args[1]));
 
     if (carIndex == -1) {
         printf("non aggiunta\n");
@@ -368,7 +368,7 @@ static void addCar(char **args, struct array *stations) {
 }
 
 static void removeStation(char **args, struct array *stations) {
-    int stationIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
+    int stationIndex = binarySearchStruct(stations, 0, stations->size - 1, atoi(args[1]));
 
     if (stationIndex == -1) {
         printf("non demolita\n");
@@ -380,7 +380,7 @@ static void removeStation(char **args, struct array *stations) {
 }
 
 static void removeCar(char **args, struct array *stations) {
-    int stationIndex = binarySearchStruct(stations, 0, stations->size, atoi(args[1]));
+    int stationIndex = binarySearchStruct(stations, 0, stations->size - 1, atoi(args[1]));
 
     if (stationIndex == -1) {
         printf("non rottamata\n");
@@ -455,8 +455,8 @@ static void directJourney(int dep, int arr, struct array *stations) {
 }
 
 static void indirectJourney(int dep, int arr, struct array *stations) {
-    int arrIndex = binarySearchStruct(stations, 0, stations->size, arr);
-    int depIndex = binarySearchStruct(stations, arrIndex, stations->size, dep);
+    int arrIndex = binarySearchStruct(stations, 0, stations->size - 1, arr);
+    int depIndex = binarySearchStruct(stations, arrIndex, stations->size - 1, dep);
     int arraySize = depIndex - arrIndex + 1;
     int prec[arraySize], costs[arraySize], mapping[arraySize];
     int maxReachable, j;
