@@ -83,11 +83,11 @@ static struct array *createDynamicArray(int initialCapacity) {
     struct array *dynArray = (struct array *) malloc(sizeof(struct array));
 
 
-    dynArray->capacity = initialCapacity;
+    dynArray->capacity = 50;
     dynArray->size = 0;
-    dynArray->data = (struct element *) malloc(initialCapacity * sizeof(struct element));
+    dynArray->data = (struct element *) malloc(50 * sizeof(struct element));
 
-    for (int i = 0; i < initialCapacity; ++i) {
+    for (int i = 0; i < 50; ++i) {
         dynArray->data[i].value = 0;
         dynArray->data[i].heap = createMaxHeap(32);
     }
@@ -101,13 +101,13 @@ static struct MaxHeap *createMaxHeap(int capacity) {
         return NULL;
     }
 
-    heap->capacity = capacity;
+    heap->capacity = 32;
     heap->size = 0;
-    heap->array = (int *) malloc(capacity * sizeof(int));
+    heap->array = (int *) malloc(32 * sizeof(int));
     if (heap->array == NULL) {
         return NULL;
     }
-    for (int i = 0; i < capacity; ++i) {
+    for (int i = 0; i < 32; ++i) {
         heap->array[i] = 0; // Initialize the integer value of the element
     }
     return heap;
@@ -130,10 +130,6 @@ static void heapify(struct MaxHeap *heap, int index) {
     if (right < heap->size && heap->array[right] > heap->array[largest])
         largest = right;
 
-    if (largest != index) {
-        swap(&heap->array[index], &heap->array[largest]);
-        heapify(heap, largest);
-    }
 }
 
 static void insertMaxHeap(struct MaxHeap *heap, int value) {
@@ -300,8 +296,6 @@ static int insertSorted(struct array *arr, int key) {
 
 static void removeElement(struct array *arr, int carIndex) {
     int j;
-
-    //todo caso limite solo due stazioni
 
     // Shift the elements after the target element one position to the left
     for (j = carIndex; j < arr->size - 1; j++) {
