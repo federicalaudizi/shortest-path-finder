@@ -27,5 +27,8 @@ Removes a car from the indicated station, if the station exists and has at least
 Requests the planning of a route with the constraints mentioned above. Expected response: the stops in order of travel, represented by the distance of the stations from the start of the highway, separated by spaces and followed by a newline at the end. The starting and destination stations must be included; if they coincide, the station is printed only once. If the route does not exist, it prints "no existing path". The planning action does not alter the stations or their vehicle fleets. The given stations will still be present after this command.
 
 ## Implementation
-The project was implemented using only libc and custom implementations of data structures. In particular, every station along the highway is organized within a sorted array, each element also features a reference to a maximum-heap housing the range information for all electric cars at that station.
+The project was implemented using only libc and custom implementations of data structures. In particualr, a sorted array "stations" was implemented, where each element consists of two components: the kilometerical distance of a station x from the highway's starting point and a pointer to a max-heap storing the range of all electric cars parked at station x.
+To find the minimum path in the most efficent way it was implementd a modified version of the Dijkstra algorithm, where:
+1. Binary search was used to find the indices of the departure (i) and arrival (j) stations within "stations". (O(n))
+2. Three new arrays of lenght i-j were created: prec (used to store the predecessor station), costs (to store the cost to reach a station), and mapping (used to store the distances of stations from the departure station).
 
