@@ -1,4 +1,4 @@
-# Find Path
+# Shortest Path Finder
 
 ## Problem Description
 The goal of this project is to plan a route between two service stations (represented as the kilometrical distance from the beginning of the highway) with the minimum number of stops. Each service station has a fleet of electric vehicles with a range for the maximum distance it can travel on a single charge. A new vehicle must be rented at each station where they stop. 
