@@ -27,7 +27,11 @@ Removes a car from the indicated station, if the station exists and has at least
 Requests the planning of a route with the constraints mentioned above. Expected response: the stops in order of travel, represented by the distance of the stations from the start of the highway, separated by spaces and followed by a newline at the end. The starting and destination stations must be included; if they coincide, the station is printed only once. If the route does not exist, it prints "no existing path". The planning action does not alter the stations or their vehicle fleets. The given stations will still be present after this command.
 
 ## Implementation
-The project was implemented using only libc and custom implementations of data structures. In particualr, a sorted array "stations" was implemented, where each element consists of two components: the kilometerical distance of a station x from the highway's starting point and a pointer to a max-heap storing the range of all electric cars parked at station x.
+The project was implemented using only libc and custom implementations of data structures. In particualr, a sorted array "stations" was implemented, where each element consists of two components: the kilometerical distance of a station v<sub>i</sub> from the highway's starting point and a pointer to a max-heap storing the range of all electric cars parked at station v<sub>j</sub>.
+<p align="center">
+  <img width="449" alt="Screenshot 2023-11-10 at 13 36 53" src="https://github.com/federicalaudizi/shortest-path-finder/assets/92373780/a792b808-d850-42db-b7a7-dc3afd40cda3">
+</p>
+  
 To find the minimum path in the most efficent way it was implementd a modified version of the Dijkstra algorithm, where:
 1. Binary search was used to find the indices of the departure (i) and arrival (j) stations within "stations". (O(n))
 2. Three new arrays of lenght i-j were created: prec (used to store the predecessor station), costs (to store the cost to reach a station), and mapping (used to store the distances of stations from the departure station).
